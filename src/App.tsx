@@ -11,7 +11,6 @@ import { Quiz, Tab, Question } from './types';
 import QuizSession from './components/QuizSession';
 import Ranking from './components/Ranking';
 import AIRecommendations from './components/AIRecommendations';
-import { GoogleGenAI } from "@google/genai";
 import { getAIGeneratedImage } from './services/geminiService';
 
 interface UserData {
@@ -225,26 +224,18 @@ export default function App() {
   const handleGenerateAIQuiz = async (animeName: string) => {
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const prompt = `Gere um quiz sobre o anime "${animeName}" com exatamente 10 perguntas. 
-      Retorne apenas um array JSON puro, sem markdown, seguindo esta estrutura:
-      [
-        {
-          "id": "q1",
-          "text": "Pergunta aqui?",
-          "options": ["Opção 1", "Opção 2", "Opção 3", "Opção 4"],
-          "correctAnswer": 0
-        }
-      ]`;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+      const response = await fetch("/api/generate-quiz", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ animeName }),
       });
-
-      const text = response.text || "[]";
-      const jsonContent = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const dynamicQuestions: Question[] = JSON.parse(jsonContent);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      const dynamicQuestions: Question[] = data.questions;
 
       const aiQuiz: Quiz = {
         id: `ai-${Date.now()}`,

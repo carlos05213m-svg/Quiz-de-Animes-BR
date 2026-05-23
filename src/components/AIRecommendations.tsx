@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
 import { Sparkles, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -15,21 +14,18 @@ export default function AIRecommendations({ onSelectAnime }: AIRecommendationsPr
   async function fetchRecommendations(searchQuery?: string) {
     setLoading(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
-      let prompt = "Sugira 4 animes populares para um quiz, retornando apenas os nomes separados por vírgula, sem explicações.";
-      if (searchQuery) {
-        prompt = `Sugira 4 animes parecidos com "${searchQuery}" para um quiz, retornando apenas os nomes separados por vírgula, sem explicações.`;
-      }
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+      const response = await fetch("/api/recommendations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: searchQuery }),
       });
-      
-      const text = response.text || "";
-      const list = text.split(',').map(s => s.trim()).filter(Boolean);
-      setRecommendations(list);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setRecommendations(data.recommendations || []);
     } catch (error) {
       console.error("Erro ao buscar recomendações:", error);
       if (!searchQuery) {

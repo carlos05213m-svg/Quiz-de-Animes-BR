@@ -2,5 +2,7 @@
   "name": "Quiz de Animes",
   "description": "Um quiz desafiador sobre animes com ranking, estrelas e recomendações por IA.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
